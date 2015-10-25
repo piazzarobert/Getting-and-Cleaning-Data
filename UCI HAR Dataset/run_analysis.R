@@ -45,17 +45,17 @@ XNames <- names(extracted_variables)
 for (i in 1:length(XNames)) 
 {
   XNames[i] <- gsub("\\()","",XNames[i])
-  XNames[i] <- gsub("-std","StdDev_",XNames[i])
-  XNames[i] <- gsub("-mean","Mean_",XNames[i])
   XNames[i] <- gsub("-","", XNames[i])
-  XNames[i] <- gsub("^(t)","time_",XNames[i])
-  XNames[i] <- gsub("^(f)","freq_",XNames[i])
+  XNames[i] <- gsub("^(t)","Time_",XNames[i])
+  XNames[i] <- gsub("^(f)","Freq_",XNames[i])
   XNames[i] <- gsub("([Gg]ravity)","Gravity_",XNames[i])
   XNames[i] <- gsub("([Bb]ody[Bb]ody|[Bb]ody)","Body_",XNames[i])
   XNames[i] <- gsub("[Gg]yro","Gyro_",XNames[i])
   XNames[i] <- gsub("Mag","Magnitude_",XNames[i])
   XNames[i] <- gsub("Jerk","Jerk_",XNames[i])
-  XNames[i] <- gsub("Acc","Acceleration_",XNames[i]) 
+  XNames[i] <- gsub("Acc","Acceleration_",XNames[i])
+  XNames[i] <- gsub("std","StdDev",XNames[i])
+  XNames[i] <- gsub("mean","Mean",XNames[i])
   
 };
 
@@ -80,13 +80,31 @@ for (i in 1:length(XNames))
 names(extracted_variables) <- XNames
 
 #combine all the variables into a bigger data set
-Final_Data <- cbind(subject_total,y_total,extracted_variables)
+wide_data <- cbind(Observation = row.names(extracted_variables), subject_total,y_total,extracted_variables)
 
-# 5. Create a second, independent tidy data set with the average of each variable for each activity and each subject. 
+#This is a little out of order but we'll use the wide dataset to creat the summary table before creating the tidy data
+#Create a second, independent tidy data set with the average of each variable for each activity and each subject. 
 
-# Summarizing the Final_Data table to include just the mean of each variable for each activity and each subject
-Summary_group <- group_by(Final_Data,SubjectID,Activity) %>% summarise_each(funs(mean))
+# Summarizing the data_tidy table to include just the mean of each variable for each activity and each subject
+Summary_group <- group_by(wide_data[,2:69],SubjectID,Activity) %>% summarise_each(funs(mean))
 
 # Export the tidyData set 
 write.table(Summary_group, './Summary_group.txt',row.names=FALSE,sep='\t')
+
+#turn into a long data set
+long_data <- gather(data = wide_data, Measurement, Value, -Observation, -SubjectID, -Activity)
+
+#seperate into columns all the unique variables
+tidy_data <- separate(long_data, Measurement, into = c("Dimension", "Source", "Type", "Jerk", "Direction", "Measurement"), sep = "_", extra = "merge")
+
+#turn all the characters in the variables to factors
+for (i in 4:9) 
+  {
+  
+  tidy_data[,i] <- as.factor(tidy_data[,i])
+ 
+  }
+
+#we now have a tidy data set with all character as factors, each column as one variable and one unique observation per row
+
 

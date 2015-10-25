@@ -10,6 +10,7 @@ Finally a Fast Fourier Transform (FFT) was applied to some of these signals prod
 These signals were used to estimate variables of the feature vector for each pattern:  
 '-XYZ' is used to denote 3-axial signals in the X, Y and Z directions.
 
+Wide Data set: 
 timeBodyAcceleration-XYZ
 timeGravityAcceleration-XYZ
 timeBodyAccelerationJerk-XYZ
@@ -28,10 +29,20 @@ freqBodyAccelerationJerkMagnitude
 freqBodyGyroMagnitude
 freqBodyGyroJerkMagnitude
 
-The set of variables that were estimated from these signals are: 
+tidy Data set:
 
-mean(): Mean value
-std(): Standard deviation
+Observation: The observational number for these measurements
 
+Dimension: Whether the measurement was taken via time or frequency
 
-The complete list of variables of each feature vector is available in 'features.txt'
+Source: The source of the data is either from the Body or the gravity component
+
+Type: Whether the measurement is from the gyros or from the accelerometers
+
+Jerk: Whether the measurement is a jerk measurement or not
+
+Direction: If the measurement was along an axis, gives the axis, other wise it's the magnitude of the three
+
+Measurement: The measured value for this condition either mean or standard deviation
+
+Value: Numerical value of the measurement
