@@ -1,8 +1,9 @@
 #library
 library(dplyr)
+library(tidyr)
 
 #set working directory to the location where the UCI HAR Dataset was unzipped
-setwd('~/Dropbox/Coursera/1 Data Science Specialization/3 Get and Clean Data/UCI HAR Dataset');
+setwd('~/Dropbox/Coursera/1 Data Science Specialization/3 Get and Clean Data/Getting-and-Cleaning-Data/UCI HAR Dataset');
 
 # Read in the data from files
 x_test          <- read.table("./test/X_test.txt", header = FALSE)
@@ -38,25 +39,42 @@ subject_total <- rbind(subject_train, subject_test)
 names(subject_total) <- "SubjectID" 
 
 #pull out just the variables that matter to us, so only those with mean and standard deviation in their name are extracted
-extracted_variables <- X_total[, c(grep("mean", names(X_total)), grep("std", names(X_total)))] 
+extracted_variables <- X_total[, grepl("(mean|std)\\(\\)", names(X_total))] 
 
 XNames <- names(extracted_variables)
 for (i in 1:length(XNames)) 
 {
   XNames[i] <- gsub("\\()","",XNames[i])
-  XNames[i] <- gsub("-std$","StdDev",XNames[i])
-  XNames[i] <- gsub("-mean","Mean",XNames[i])
-  XNames[i] <- gsub("^(t)","time",XNames[i])
-  XNames[i] <- gsub("^(f)","freq",XNames[i])
-  XNames[i] <- gsub("([Gg]ravity)","Gravity",XNames[i])
-  XNames[i] <- gsub("([Bb]ody[Bb]ody|[Bb]ody)","Body",XNames[i])
-  XNames[i] <- gsub("[Gg]yro","Gyro",XNames[i])
-  XNames[i] <- gsub("AccMag","AccMagnitude",XNames[i])
-  XNames[i] <- gsub("([Bb]odyaccjerkmag)","BodyAccJerkMagnitude",XNames[i])
-  XNames[i] <- gsub("JerkMag","JerkMagnitude",XNames[i])
-  XNames[i] <- gsub("GyroMag","GyroMagnitude",XNames[i])
-  XNames[i] <- gsub("Acc","Acceleration",XNames[i]) 
+  XNames[i] <- gsub("-std","StdDev_",XNames[i])
+  XNames[i] <- gsub("-mean","Mean_",XNames[i])
+  XNames[i] <- gsub("-","", XNames[i])
+  XNames[i] <- gsub("^(t)","time_",XNames[i])
+  XNames[i] <- gsub("^(f)","freq_",XNames[i])
+  XNames[i] <- gsub("([Gg]ravity)","Gravity_",XNames[i])
+  XNames[i] <- gsub("([Bb]ody[Bb]ody|[Bb]ody)","Body_",XNames[i])
+  XNames[i] <- gsub("[Gg]yro","Gyro_",XNames[i])
+  XNames[i] <- gsub("Mag","Magnitude_",XNames[i])
+  XNames[i] <- gsub("Jerk","Jerk_",XNames[i])
+  XNames[i] <- gsub("Acc","Acceleration_",XNames[i]) 
+  
 };
+
+#we will be splitting all into a tall data set so those measurements without Jerk or Magnitude need to be told they don't have it
+XNames[!grepl("Jerk", XNames)] <- gsub("Gyro_", "Gyro_NonJerk_", XNames[!grepl("Jerk", XNames)])
+XNames[!grepl("Jerk", XNames)] <- gsub("Acceleration_", "Acceleration_NonJerk_", XNames[!grepl("Jerk", XNames)])
+
+#now a measurement is either along a specific axis or is a magnitude
+#we're going to find all variables that don't have magnitude in their name and replace the location where magnitude would normally go and insert the axis
+for (i in 1:length(XNames)) 
+{
+    #if there's no magnitude in the name, we will do the operation
+    if (!grepl("Magnitude",XNames[i]))
+    {
+    XNames[i] <- gsub("Jerk_", paste("Jerk_", substr(XNames[i],nchar(XNames[i]),nchar(XNames[i])),"_", sep = ""), XNames[i])  
+    #now that we've inserted the axis variable, remove it from the end
+    XNames[i] <- gsub("[XYZ]$","", XNames[i])
+    }
+}
 
 #rename all with the new more descriptive names
 names(extracted_variables) <- XNames
